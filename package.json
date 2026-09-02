@@ -1,0 +1,47 @@
+{
+  "name": "n8n-nodes-seomatic",
+  "version": "1.0.0",
+  "description": "SEOmatic for n8n: AI SEO analysis over your own Google Search Console data, plus approval-gated agent actions.",
+  "keywords": [
+    "n8n-community-node-package",
+    "seo",
+    "seomatic",
+    "search console",
+    "ai"
+  ],
+  "license": "MIT",
+  "homepage": "https://seomatic.ai/developers",
+  "author": {
+    "name": "SEOmatic",
+    "email": "contact@seomatic.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Minh42/n8n-nodes-seomatic.git"
+  },
+  "engines": {
+    "node": ">=18.10"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && cp -r nodes/Seomatic/seomatic.svg dist/nodes/Seomatic/ 2>/dev/null || true",
+    "dev": "tsc --watch",
+    "lint": "eslint nodes credentials"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/SeomaticApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Seomatic/Seomatic.node.js"
+    ]
+  },
+  "devDependencies": {
+    "n8n-workflow": "^1.60.0",
+    "typescript": "^5.6.0"
+  }
+}
