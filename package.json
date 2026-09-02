@@ -29,7 +29,8 @@
     "lint": "eslint nodes credentials"
   },
   "files": [
-    "dist"
+    "dist",
+    "index.js"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
