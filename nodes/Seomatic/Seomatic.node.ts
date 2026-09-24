@@ -83,24 +83,35 @@ export class Seomatic implements INodeType {
 			const tool = this.getNodeParameter('tool', itemIndex) as string;
 			const rawArgs = this.getNodeParameter('args', itemIndex, '{}');
 
-			let args: IDataObject;
+			// Tool names are snake_case identifiers. Anything else (a path such as
+			// "..", a slash, a query) is refused before any request is made.
+			if (!/^[a-z][a-z0-9_]{0,63}$/.test(tool)) {
+				if (this.continueOnFail()) {
+					out.push({ json: { error: `Unknown tool: ${tool}` }, pairedItem: { item: itemIndex } });
+					continue;
+				}
+				throw new NodeOperationError(this.getNode(), `Unknown tool: ${tool}`, { itemIndex });
+			}
+
+			let parsed: unknown;
 			try {
-				args =
-					typeof rawArgs === 'string'
-						? (JSON.parse(rawArgs || '{}') as IDataObject)
-						: (rawArgs as IDataObject);
+				parsed = typeof rawArgs === 'string' ? JSON.parse(rawArgs || '{}') : rawArgs;
 			} catch {
+				parsed = undefined;
+			}
+			if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
 				if (this.continueOnFail()) {
 					out.push({
-						json: { error: 'Arguments must be valid JSON' },
+						json: { error: 'Arguments must be a JSON object' },
 						pairedItem: { item: itemIndex },
 					});
 					continue;
 				}
-				throw new NodeOperationError(this.getNode(), 'Arguments must be valid JSON', {
+				throw new NodeOperationError(this.getNode(), 'Arguments must be a JSON object', {
 					itemIndex,
 				});
 			}
+			const args = parsed as IDataObject;
 
 			let response: IDataObject;
 			try {

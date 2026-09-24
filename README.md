@@ -29,6 +29,13 @@ The node returns `{ "tool": "...", "result": { ... } }`, with `result` holding t
 
 The node can also be used as a tool by n8n AI agents.
 
+### Security
+
+- The node only ever sends your API key to `https://app.seomatic.ai`. It has no dependencies and does not read environment variables or files.
+- API keys are read-only by default. Only a key created with **Allow this key to make changes** can act, and only on the Infrastructure plan.
+- **With AI agents, use a read-only key.** An AI agent can be steered by text it reads (prompt injection). A read-only key means the worst it can do is read your SEO data; it can never approve or apply a change.
+- You can revoke a key at any time in **Settings > AI Agents > API keys**.
+
 ## Example workflows
 
 - **Weekly SEO report**: Schedule Trigger > SEOmatic (`compare_periods`) > format > email or Slack.
