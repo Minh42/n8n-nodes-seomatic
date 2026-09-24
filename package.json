@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-seomatic",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "SEOmatic for n8n: Google Search Console insights, site audits, AI visibility, pay-as-you-go articles, and approval-gated SEO agent tasks, plus a trigger for SEOmatic events.",
   "keywords": [
     "n8n-community-node-package",
