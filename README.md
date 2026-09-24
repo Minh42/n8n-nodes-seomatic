@@ -13,7 +13,7 @@ The package contains two nodes:
 
 ## Installation
 
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation. On self-hosted n8n: **Settings > Community nodes > Install**, then enter `n8n-nodes-seomatic`.
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation-and-management) in the n8n community nodes documentation. On self-hosted n8n, an owner or admin opens **Settings > Community nodes > Install**, enters `n8n-nodes-seomatic`, and ticks **I understand the risks of installing unverified code from a public source**. On n8n Cloud, until n8n verifies the node, use SEOmatic's [Zapier](https://seomatic.ai/developers/zapier) or [Make](https://seomatic.ai/developers/make) integration.
 
 ## Credentials
 
@@ -34,14 +34,14 @@ The SEOmatic n8n integration is available on the **Infrastructure** plan, like S
 | Operations | What they need |
 | --- | --- |
 | Search Performance, Site Audit, AI Visibility > Get | Any API key. Search Performance also needs Google Search Console connected in SEOmatic. |
-| Article (all operations) | Articles are paid from a prepaid balance ($9 per article). |
+| Article > Generate | A prepaid article balance ($9 per article). Get and Get Many are free reads. |
 | AI Visibility > Run Scan, Tracked Prompt (all), SEO Task (all) | An API key created with **Allow this key to make changes**. SEO Task operations also need the SEO agent turned on in SEOmatic. |
 | SEOmatic Trigger | A public `https://` address for your n8n instance. |
 
 Operations that spend money or credits say so in their description:
 
 - **Article > Generate** costs $9 from the prepaid article balance. With an empty balance the node stops with the price and a link to top up.
-- **AI Visibility > Run Scan** uses AI credits from the workspace. If they cannot cover it, the scan is refused: workflows never spend prepaid scans. One scan per hour can be started this way.
+- **AI Visibility > Run Scan** uses AI credits from the workspace. If they cannot cover it, no scan starts and the node outputs a normal item with `status: "insufficient_credits"` (not an error, so check `status`): workflows never spend prepaid scans. One scan per hour can be started this way.
 - **SEO Task > Approve** and **Execute** start work that uses AI credits.
 - **Tracked Prompt > Create** is free, but each active prompt adds to the cost of every future scan.
 
@@ -151,11 +151,11 @@ When you activate the workflow, the trigger registers your n8n webhook address w
 
 Every delivery is signed. The trigger checks the `X-Seomatic-Signature` header (HMAC-SHA256 of the timestamp and body with the secret SEOmatic returned when the webhook was registered), refuses deliveries older than five minutes, and ignores anything that does not match.
 
-Requirements: the Infrastructure plan, and a public `https://` address for n8n (n8n Cloud has one; on self-hosted n8n set `WEBHOOK_URL`). SEOmatic does not send events to `http://` or private addresses, so "Listen for test event" on `localhost` will not receive events.
+Requirements: the Infrastructure plan, and a public `https://` address for n8n (n8n Cloud has one; on self-hosted n8n set `WEBHOOK_URL`). With an `http://` address, activation (or "Listen for test event" on `localhost`) fails with "SEOmatic can only send events to an https:// address"; SEOmatic also refuses private addresses. A workspace can have up to 25 webhook endpoints: each active trigger, and each "Listen for test event" while it listens, registers one.
 
 ## Example workflows
 
-- **Approve SEO fixes from Slack**: SEOmatic Trigger (SEO Task Awaiting Approval) > Slack (send the task title with Approve and Dismiss buttons) > Wait (for the reply) > SEOmatic (SEO Task > Approve or Dismiss, with the task ID from the trigger).
+- **Approve SEO fixes from Slack**: SEOmatic Trigger (SEO Task Awaiting Approval) > Slack (Send and Wait for Response, approval buttons) > IF approved > SEOmatic (SEO Task > Approve or Dismiss, with the task ID from the trigger).
 - **Weekly SEO report**: Schedule Trigger (Monday 8:00) > SEOmatic (Search Performance > Compare Periods) > SEOmatic (Search Performance > Find Low Click Rate Pages) > Gmail or Slack.
 - **Real traffic drop alarm**: Schedule Trigger (daily) > SEOmatic (Search Performance > Get Monthly Trend) > IF (`yoy.verdict` starts with "Real decline") > Slack.
 - **Indexing watch for new pages**: SEOmatic Trigger (Page Published) > Wait (3 days) > SEOmatic (Search Performance > Check Indexing with `{{ $json.data.url }}`) > IF (verdict is not PASS) > email.
