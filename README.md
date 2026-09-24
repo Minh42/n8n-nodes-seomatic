@@ -1,38 +1,53 @@
 # n8n-nodes-seomatic
 
-[SEOmatic](https://seomatic.ai) for n8n: AI SEO analysis over your own Google
-Search Console data, plus approval-gated agent actions on paid plans.
+This is an n8n community node. It lets you use [SEOmatic](https://seomatic.ai) in your n8n workflows: SEO analysis over your own Google Search Console data, and SEOmatic's approval-gated SEO agents.
 
-## What it does
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
 
-One node, every SEOmatic tool. The tool list loads live from your API key, so
-free keys see the free insight tools (Search Console performance,
-striking-distance keywords, cannibalization, CTR outliers, seasonality
-verdicts, site audits...) and paid keys additionally see agent actions
-(staging fixes, campaigns - always human-approval-gated in SEOmatic).
+[Installation](#installation) · [Credentials](#credentials) · [Usage](#usage) · [Example workflows](#example-workflows) · [Plans](#plans) · [Resources](#resources)
 
-## Setup
+## Installation
 
-1. Create a free SEOmatic account at https://seomatic.ai and connect Google
-   Search Console.
-2. Settings > Integrations > API Keys > create a key (starts with `smk_`).
-3. In n8n: install this community package, add SEOmatic credentials with the
-   key, drop the SEOmatic node into a workflow.
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation. In a self-hosted n8n: **Settings > Community nodes > Install**, then enter `n8n-nodes-seomatic`.
+
+## Credentials
+
+The node authenticates with a SEOmatic API key.
+
+1. Create a SEOmatic account at [seomatic.ai](https://seomatic.ai) and connect Google Search Console.
+2. In SEOmatic, open **Settings > AI Agents > API keys** and create a key. It starts with `smk_`.
+3. In n8n, create a **SEOmatic API** credential and paste the key. n8n checks it against SEOmatic when you save.
+
+## Usage
+
+The node has two fields:
+
+- **Tool**: the SEOmatic tool to run. The list loads live from your API key, so it always shows exactly the tools your key can run.
+- **Arguments**: the tool's arguments as JSON, for example `{"days": 28, "limit": 50}`. Each tool's arguments are listed in the [SEOmatic API reference](https://seomatic.ai/developers/rest-api).
+
+The node returns `{ "tool": "...", "result": { ... } }`, with `result` holding the tool's output as fields you can use in the next node.
+
+The node can also be used as a tool by n8n AI agents.
 
 ## Example workflows
 
-- **Weekly SEO report to Slack/email**: Cron -> SEOmatic (`compare_periods`)
-  -> format -> send.
-- **Traffic-drop alarm**: Cron -> SEOmatic (`get_seasonality_baseline` +
-  `compare_periods`) -> IF real drop -> alert.
-- **Approve staged fixes from your workflow**: SEOmatic
-  (`list_seo_tasks`) -> filter -> SEOmatic (`decide_seo_task`).
+- **Weekly SEO report**: Schedule Trigger > SEOmatic (`compare_periods`) > format > email or Slack.
+- **Traffic-drop alarm**: Schedule Trigger > SEOmatic (`get_seasonality_baseline`, then `compare_periods`) > IF the drop is real > alert.
+- **Approve staged fixes from a workflow** (Infrastructure plan, see below): SEOmatic (`list_seo_tasks`) > filter > SEOmatic (`decide_seo_task`).
 
-## Pricing
+## Plans
 
-Free plan covers analysis tools with a monthly question quota. Agent actions
-require a paid plan (from $99/month). https://seomatic.ai/pricing
+- **Reading and analysis** tools work on every plan, including the free plan (which has a monthly question quota).
+- **Agent actions** over the API (tools that change something, such as deciding on a staged task) require the **Infrastructure** plan. Every change an agent makes still waits for approval in SEOmatic unless you have chosen otherwise.
+
+See [seomatic.ai/pricing](https://seomatic.ai/pricing).
+
+## Resources
+
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
+- [SEOmatic API reference](https://seomatic.ai/developers/rest-api)
+- [SEOmatic developers](https://seomatic.ai/developers)
 
 ## License
 
-MIT
+[MIT](LICENSE)

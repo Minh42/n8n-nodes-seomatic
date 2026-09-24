@@ -2,6 +2,7 @@ import type {
 	IAuthenticateGeneric,
 	ICredentialTestRequest,
 	ICredentialType,
+	Icon,
 	INodeProperties,
 } from 'n8n-workflow';
 
@@ -10,7 +11,12 @@ export class SeomaticApi implements ICredentialType {
 
 	displayName = 'SEOmatic API';
 
-	documentationUrl = 'https://seomatic.ai/developers';
+	icon: Icon = {
+		light: 'file:../nodes/Seomatic/seomatic.svg',
+		dark: 'file:../nodes/Seomatic/seomatic.dark.svg',
+	};
+
+	documentationUrl = 'https://github.com/Minh42/n8n-nodes-seomatic?tab=readme-ov-file#credentials';
 
 	properties: INodeProperties[] = [
 		{
@@ -18,9 +24,10 @@ export class SeomaticApi implements ICredentialType {
 			name: 'apiKey',
 			type: 'string',
 			typeOptions: { password: true },
+			required: true,
 			default: '',
 			description:
-				'Create one in SEOmatic under Settings > Integrations > API Keys (starts with smk_)',
+				'Create one in SEOmatic under Settings > AI Agents > API keys. It starts with smk_.',
 		},
 	];
 
