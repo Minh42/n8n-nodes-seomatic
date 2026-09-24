@@ -1,34 +1,45 @@
 import type {
 	IDataObject,
 	IExecuteFunctions,
-	ILoadOptionsFunctions,
 	INodeExecutionData,
-	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
-	JsonObject,
 } from 'n8n-workflow';
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
-const BASE_URL = 'https://app.seomatic.ai';
+import { aiVisibilityOperations, executeAiVisibility } from './actions/aiVisibility';
+import { articleOperations, executeArticle } from './actions/article';
+import { executeSearchPerformance, searchPerformanceOperations } from './actions/searchPerformance';
+import { executeSeoTask, seoTaskOperations } from './actions/seoTask';
+import { executeSiteAudit, siteAuditOperations } from './actions/siteAudit';
+import { executeTrackedPrompt, trackedPromptOperations } from './actions/trackedPrompt';
+import { searchArticles, searchSeoTasks, searchTrackedPrompts } from './listSearch';
 
-/**
- * SEOmatic node: a thin wrapper over the REST v1 tool bridge
- * (POST /api/v1/tools/{name}). The tool list is loaded from GET /api/v1/tools
- * with the user's own key, so the node always shows exactly the tools that
- * key can run (insight tools on free keys, agent actions on paid keys) and
- * never goes stale as SEOmatic adds tools.
- */
+type ResourceHandler = (
+	this: IExecuteFunctions,
+	operation: string,
+	itemIndex: number,
+) => Promise<IDataObject[]>;
+
+const handlers: Record<string, ResourceHandler> = {
+	aiVisibility: executeAiVisibility,
+	article: executeArticle,
+	searchPerformance: executeSearchPerformance,
+	seoTask: executeSeoTask,
+	siteAudit: executeSiteAudit,
+	trackedPrompt: executeTrackedPrompt,
+};
+
 export class Seomatic implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'SEOmatic',
 		name: 'seomatic',
 		icon: { light: 'file:seomatic.svg', dark: 'file:seomatic.dark.svg' },
 		group: ['transform'],
-		version: [1],
-		subtitle: '={{$parameter["tool"]}}',
+		version: [2],
+		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description:
-			'Run SEOmatic SEO tools on your own Google Search Console data, plus approval-gated agent actions on paid plans',
+			'Read Google Search Console insights, audit pages, track AI visibility, and approve SEO agent tasks in SEOmatic',
 		defaults: { name: 'SEOmatic' },
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
@@ -36,115 +47,78 @@ export class Seomatic implements INodeType {
 		credentials: [{ name: 'seomaticApi', required: true }],
 		properties: [
 			{
-				displayName: 'Tool Name or ID',
-				name: 'tool',
+				displayName: 'Resource',
+				name: 'resource',
 				type: 'options',
-				typeOptions: { loadOptionsMethod: 'getTools' },
-				default: '',
-				required: true,
-				description:
-					'The SEOmatic tool to run. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				noDataExpression: true,
+				options: [
+					{ name: 'AI Visibility', value: 'aiVisibility' },
+					{ name: 'Article', value: 'article' },
+					{ name: 'Search Performance', value: 'searchPerformance' },
+					{ name: 'SEO Task', value: 'seoTask' },
+					{ name: 'Site Audit', value: 'siteAudit' },
+					{ name: 'Tracked Prompt', value: 'trackedPrompt' },
+				],
+				default: 'searchPerformance',
 			},
-			{
-				displayName: 'Arguments',
-				name: 'args',
-				type: 'json',
-				default: '{}',
-				description:
-					'The tool arguments as JSON, e.g. {"days": 28, "limit": 50}. Each tool lists its arguments at https://seomatic.ai/developers/rest-api.',
-			},
+			...aiVisibilityOperations,
+			...articleOperations,
+			...searchPerformanceOperations,
+			...seoTaskOperations,
+			...siteAuditOperations,
+			...trackedPromptOperations,
 		],
 	};
 
 	methods = {
-		loadOptions: {
-			async getTools(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const response = (await this.helpers.httpRequestWithAuthentication.call(
-					this,
-					'seomaticApi',
-					{ method: 'GET', url: `${BASE_URL}/api/v1/tools`, json: true },
-				)) as { tools?: Array<{ name: string; description?: string }> };
-				return (response.tools ?? [])
-					.map((t) => ({
-						name: t.name,
-						value: t.name,
-						description: (t.description ?? '').slice(0, 200),
-					}))
-					.sort((a, b) => a.name.localeCompare(b.name));
-			},
+		listSearch: {
+			searchArticles,
+			searchSeoTasks,
+			searchTrackedPrompts,
 		},
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
-		const out: INodeExecutionData[] = [];
+		const returnData: INodeExecutionData[] = [];
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-			const tool = this.getNodeParameter('tool', itemIndex) as string;
-			const rawArgs = this.getNodeParameter('args', itemIndex, '{}');
-
-			// Tool names are snake_case identifiers. Anything else (a path such as
-			// "..", a slash, a query) is refused before any request is made.
-			if (!/^[a-z][a-z0-9_]{0,63}$/.test(tool)) {
-				if (this.continueOnFail()) {
-					out.push({ json: { error: `Unknown tool: ${tool}` }, pairedItem: { item: itemIndex } });
-					continue;
-				}
-				throw new NodeOperationError(this.getNode(), `Unknown tool: ${tool}`, { itemIndex });
-			}
-
-			let parsed: unknown;
 			try {
-				parsed = typeof rawArgs === 'string' ? JSON.parse(rawArgs || '{}') : rawArgs;
-			} catch {
-				parsed = undefined;
-			}
-			if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-				if (this.continueOnFail()) {
-					out.push({
-						json: { error: 'Arguments must be a JSON object' },
-						pairedItem: { item: itemIndex },
-					});
-					continue;
+				const resource = this.getNodeParameter('resource', itemIndex) as string;
+				const operation = this.getNodeParameter('operation', itemIndex) as string;
+				const handler = handlers[resource];
+				if (!handler) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`The resource "${resource}" is not supported`,
+						{ itemIndex },
+					);
 				}
-				throw new NodeOperationError(this.getNode(), 'Arguments must be a JSON object', {
-					itemIndex,
-				});
-			}
-			const args = parsed as IDataObject;
-
-			let response: IDataObject;
-			try {
-				response = (await this.helpers.httpRequestWithAuthentication.call(this, 'seomaticApi', {
-					method: 'POST',
-					url: `${BASE_URL}/api/v1/tools/${encodeURIComponent(tool)}`,
-					body: args,
-					json: true,
-				})) as IDataObject;
+				const results = await handler.call(this, operation, itemIndex);
+				for (const json of results) {
+					returnData.push({ json, pairedItem: { item: itemIndex } });
+				}
 			} catch (error) {
 				if (this.continueOnFail()) {
-					out.push({
-						json: { error: (error as Error).message },
+					const description = (error as { description?: unknown }).description;
+					returnData.push({
+						json: {
+							error: (error as Error).message,
+							...(typeof description === 'string' && description ? { description } : {}),
+						},
 						pairedItem: { item: itemIndex },
 					});
 					continue;
 				}
-				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex });
+				const nodeError =
+					error instanceof NodeApiError || error instanceof NodeOperationError
+						? error
+						: new NodeOperationError(this.getNode(), error as Error, { itemIndex });
+				if (nodeError.context.itemIndex === undefined) nodeError.context.itemIndex = itemIndex;
+				throw nodeError;
 			}
-
-			// The bridge answers {tool, result} where `result` is the tool's own
-			// output as a JSON string. Parse it so the next node gets fields, not
-			// an escaped string; keep the raw text if it is not JSON.
-			const json: IDataObject = { ...response };
-			if (typeof response.result === 'string') {
-				try {
-					json.result = JSON.parse(response.result) as IDataObject;
-				} catch {
-					json.result = response.result;
-				}
-			}
-			out.push({ json, pairedItem: { item: itemIndex } });
 		}
-		return [out];
+
+		return [returnData];
 	}
 }

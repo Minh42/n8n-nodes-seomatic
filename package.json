@@ -1,12 +1,13 @@
 {
   "name": "n8n-nodes-seomatic",
-  "version": "1.0.1",
-  "description": "SEOmatic for n8n: AI SEO analysis over your own Google Search Console data, plus approval-gated agent actions.",
+  "version": "2.0.0",
+  "description": "SEOmatic for n8n: Google Search Console insights, site audits, AI visibility, pay-as-you-go articles, and approval-gated SEO agent tasks, plus a trigger for SEOmatic events.",
   "keywords": [
     "n8n-community-node-package",
     "seo",
     "seomatic",
     "search console",
+    "ai visibility",
     "ai"
   ],
   "license": "MIT",
@@ -28,6 +29,7 @@
     "dev": "n8n-node dev",
     "lint": "n8n-node lint",
     "lint:fix": "n8n-node lint --fix",
+    "test": "npm run build && node test/node-tests.cjs",
     "release": "n8n-node release",
     "prepublishOnly": "n8n-node prerelease"
   },
@@ -41,7 +43,8 @@
       "dist/credentials/SeomaticApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/Seomatic/Seomatic.node.js"
+      "dist/nodes/Seomatic/Seomatic.node.js",
+      "dist/nodes/SeomaticTrigger/SeomaticTrigger.node.js"
     ],
     "strict": true
   },
