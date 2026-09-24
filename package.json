@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-seomatic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SEOmatic for n8n: AI SEO analysis over your own Google Search Console data, plus approval-gated agent actions.",
   "keywords": [
     "n8n-community-node-package",
