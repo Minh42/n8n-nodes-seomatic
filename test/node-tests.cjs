@@ -756,6 +756,31 @@ test('HTTP 402 (acting needs Infrastructure) becomes a clear NodeApiError', asyn
 	});
 });
 
+test('HTTP 402 AUTOMATION_NOT_ENTITLED explains the n8n plan rule', async () => {
+	const h = makeExec({
+		params: sp('getQueries', { limit: 5, options: {} }),
+		respond: () => {
+			throw httpFail(402, {
+				error: 'The n8n integration requires the Infrastructure plan.',
+				code: 'AUTOMATION_NOT_ENTITLED',
+				upgrade_url: 'https://app.seomatic.ai/settings/billing?src=api',
+			});
+		},
+	});
+	await expectThrows(h.run(), (e) => {
+		assert.ok(e instanceof NodeApiError);
+		assert.equal(e.message, 'The SEOmatic n8n integration needs the Infrastructure plan');
+		assert.match(e.description, /Zapier integration/);
+		assert.match(e.description, /settings\/billing/);
+	});
+});
+
+test('credential sends the n8n client header on every call', async () => {
+	const { SeomaticApi } = require('../dist/credentials/SeomaticApi.credentials.js');
+	const c = new SeomaticApi();
+	assert.equal(c.authenticate.properties.headers['X-Seomatic-Client'], 'n8n');
+});
+
 test('HTTP 404 unknown tool explains why the operation is hidden', async () => {
 	const h = makeExec({
 		params: sp('getQueries', { limit: 5, options: {} }),

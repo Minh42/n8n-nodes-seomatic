@@ -36,6 +36,9 @@ export class SeomaticApi implements ICredentialType {
 		properties: {
 			headers: {
 				Authorization: '=Bearer {{$credentials.apiKey}}',
+				// Identifies the official n8n node: SEOmatic applies the n8n
+				// integration's plan rule (Infrastructure) on every call.
+				'X-Seomatic-Client': 'n8n',
 			},
 		},
 	};

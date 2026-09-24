@@ -29,17 +29,19 @@ The key is sent only to `https://app.seomatic.ai`, as a bearer token. You can re
 
 ## Plans and costs
 
+The SEOmatic n8n integration is available on the **Infrastructure** plan, like SEOmatic's Zapier integration. On other plans the credential test tells you so, with a link to upgrade.
+
 | Operations | What they need |
 | --- | --- |
-| Search Performance, Site Audit, AI Visibility > Get | Any plan, including free. On the free plan each call uses one question from the monthly allowance. Search Performance also needs Google Search Console connected in SEOmatic. |
-| Article (all operations) | No subscription. Articles are paid from a prepaid balance ($9 per article) and never use the free question allowance. |
-| AI Visibility > Run Scan, Tracked Prompt (all), SEO Task (all) | An API key created with **Allow this key to make changes**, and the **Infrastructure** plan. SEO Task operations also need the SEO agent turned on in SEOmatic. |
-| SEOmatic Trigger | The **Infrastructure** plan, and a public `https://` address for your n8n instance. |
+| Search Performance, Site Audit, AI Visibility > Get | Any API key. Search Performance also needs Google Search Console connected in SEOmatic. |
+| Article (all operations) | Articles are paid from a prepaid balance ($9 per article). |
+| AI Visibility > Run Scan, Tracked Prompt (all), SEO Task (all) | An API key created with **Allow this key to make changes**. SEO Task operations also need the SEO agent turned on in SEOmatic. |
+| SEOmatic Trigger | A public `https://` address for your n8n instance. |
 
 Operations that spend money or credits say so in their description:
 
 - **Article > Generate** costs $9 from the prepaid article balance. With an empty balance the node stops with the price and a link to top up.
-- **AI Visibility > Run Scan** uses AI credits from the workspace, or one $19 prepaid scan when the credits cannot cover it. One scan per hour can be started this way.
+- **AI Visibility > Run Scan** uses AI credits from the workspace. If they cannot cover it, the scan is refused: workflows never spend prepaid scans. One scan per hour can be started this way.
 - **SEO Task > Approve** and **Execute** start work that uses AI credits.
 - **Tracked Prompt > Create** is free, but each active prompt adds to the cost of every future scan.
 

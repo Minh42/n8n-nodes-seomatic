@@ -104,7 +104,10 @@ export function toNodeApiError(
 			description = options.unavailableHint ?? API_KEYS_HINT;
 			break;
 		case 402:
-			if (code === 'REST_ACT_REQUIRES_INFRA') {
+			if (code === 'AUTOMATION_NOT_ENTITLED') {
+				message = 'The SEOmatic n8n integration needs the Infrastructure plan';
+				description = `SEOmatic's n8n integration, like its Zapier integration, is part of the Infrastructure plan. Upgrade at ${upgradeUrl ?? PLANS_URL}.`;
+			} else if (code === 'REST_ACT_REQUIRES_INFRA') {
 				message = 'This operation needs the SEOmatic Infrastructure plan';
 				description = `Operations that make changes (or read the agent's task board and tracked prompts) work through n8n on the Infrastructure plan only. Upgrade at ${upgradeUrl ?? PLANS_URL}.`;
 			} else if (code === 'FREE_QUOTA_EXCEEDED') {

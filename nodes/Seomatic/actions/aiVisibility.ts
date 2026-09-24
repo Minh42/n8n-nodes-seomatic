@@ -25,7 +25,7 @@ export const aiVisibilityOperations: INodeProperties[] = [
 				value: 'runScan',
 				action: 'Run AI visibility scan',
 				description:
-					'Start a new AI visibility scan of your site or a competitor. Uses AI credits (or a $19 prepaid scan). Needs a key allowed to make changes and the Infrastructure plan.',
+					'Start a new AI visibility scan of your site or a competitor. Uses AI credits. Needs a key allowed to make changes and the Infrastructure plan.',
 			},
 		],
 		default: 'get',
@@ -59,7 +59,7 @@ export const aiVisibilityOperations: INodeProperties[] = [
 	// Run Scan
 	{
 		displayName:
-			"Starting a scan uses AI credits from your SEOmatic workspace, or one $19 prepaid scan when the credits can't cover it. It needs an API key created with 'Allow this key to make changes' and the Infrastructure plan, and is limited to one scan per hour.",
+			"Starting a scan uses AI credits from your SEOmatic workspace. If the credits can't cover it, the scan is refused: workflows never spend prepaid scans. It needs an API key created with 'Allow this key to make changes' and the Infrastructure plan, and is limited to one scan per hour.",
 		name: 'runScanNotice',
 		type: 'notice',
 		default: '',
